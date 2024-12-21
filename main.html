@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Harfi Tanıma Oyunu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-image: url('background_img2.jpeg'); /* Image in the same directory */
+            background-size: 100% 100%;
+            background-position: center; /* Keeps the image centered */
+            background-repeat: no-repeat; /* Prevents image from repeating */
+        }
+
+        h1 {
+            font-size: 1.2em;
+            font-style: italic;
+            margin: 0;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 2em;
+            margin: 10px 0;
+            color: #222;
+        }
+
+        p {
+            font-size: 1em;
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .score {
+            font-size: 1.2em;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .start-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .restart-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            transition: background-color 0.3s;
+        }
+
+        .restart-btn:hover {
+            background-color: #1e7e34;
+        }
+
+        .letter-select {
+            margin: 15px 0;
+            font-size: 1em;
+            padding: 5px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .grid button {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2em;
+            background-color: #fff;
+            border: 2px solid #333;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: "Quicksand", serif;
+            font-optical-sizing: auto;
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        .grid button:hover {
+            background-color: #ddd;
+        }
+
+        .timer {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="score" style="display: none;">Skor: 0</div>
+    <label for="letter" class="letter-label">Bir harf seçin:</label>
+    <select id="letter" class="letter-select">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="Ç">Ç</option>
+        <option value="D">D</option>
+        <option value="E">E</option>
+        <option value="F">F</option>
+        <option value="G">G</option>
+        <option value="Ğ">Ğ</option>
+        <option value="H">H</option>
+        <option value="I">I</option>
+        <option value="İ">İ</option>
+        <option value="J">J</option>
+        <option value="K">K</option>
+        <option value="L">L</option>
+        <option value="M">M</option>
+        <option value="N">N</option>
+        <option value="O">O</option>
+        <option value="Ö">Ö</option>
+        <option value="P">P</option>
+        <option value="R">R</option>
+        <option value="S">S</option>
+        <option value="Ş">Ş</option>
+        <option value="T">T</option>
+        <option value="U">U</option>
+        <option value="Ü">Ü</option>
+        <option value="V">V</option>
+        <option value="Y">Y</option>
+        <option value="Z">Z</option>
+    </select>
+
+    <button class="start-btn">OYUNA BAŞLA</button>
+    <button class="restart-btn">YENİDEN BAŞLA</button>
+
+    <div class="grid" style="display: none;"></div>
+    <div class="timer" style="display: none;">Süre: 30 saniye</div>
+
+    <!-- Background sound element -->
+    <audio id="background-sound" loop autoplay preload="auto" autoplay="true" loop="true">
+        <source src="https://www.soundjay.com/free-music/sounds/destination-01.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        const startButton = document.querySelector('.start-btn');
+        const restartButton = document.querySelector('.restart-btn');
+        const letterSelect = document.getElementById('letter');
+        const letterLabel = document.querySelector('.letter-label');
+        const grid = document.querySelector('.grid');
+        const timerDisplay = document.querySelector('.timer');
+        const scoreDisplay = document.querySelector('.score');
+
+        let score = 0;
+        let timeLeft = 30;
+        let interval;
+
+        // Example sound files
+        const correctSound = new Audio('https://www.soundjay.com/buttons/sounds/button-09a.mp3');
+        const wrongSound = new Audio('https://www.soundjay.com/buttons/sounds/button-4.mp3');
+
+        // Set background sound volume (low volume to not overpower button sounds)
+        const backgroundSound = document.getElementById('background-sound');
+        backgroundSound.volume = 0.1; // Adjust volume as needed
+
+        function generateGrid(selectedLetter) {
+            const letters = 'abcçdefgğhıijklmnoöprsştuüvyz'.split('');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 64; i++) {
+                const isTarget = Math.random() < 0.2;
+                const letter = isTarget ? selectedLetter : letters[Math.floor(Math.random() * letters.length)];
+                const letterCase = Math.random() < 0.5 ? letter.toLowerCase() : letter.toUpperCase();
+                const button = document.createElement('button');
+                button.textContent = letterCase;
+                button.addEventListener('click', () => {
+                    if (letterCase.toLowerCase() === selectedLetter.toLowerCase()) {
+                        score++;
+                        scoreDisplay.textContent = `Skor: ${score}`;
+                        button.disabled = true;
+                        button.style.backgroundColor = '#90ee90'; // Green color for correct answer
+
+                        // Play correct sound
+                        correctSound.play();
+                    } else {
+                        if (score > 0) {
+                            score--; // Decrease score but not below 0
+                        }
+                        scoreDisplay.textContent = `Skor: ${score}`;
+                        button.style.backgroundColor = '#f08080'; // Red color for wrong answer
+
+                        // Play wrong sound
+                        wrongSound.play();
+                    }
+                });
+                grid.appendChild(button);
+            }
+        }
+
+        function startGame() {
+            const selectedLetter = letterSelect.value;
+            score = 0;
+            timeLeft = 30;
+            scoreDisplay.textContent = 'Skor: 0';
+            grid.style.display = 'grid';
+            timerDisplay.style.display = 'block';
+            scoreDisplay.style.display = 'block';
+
+            generateGrid(selectedLetter);
+
+            interval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Süre: ${timeLeft} saniye`;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    grid.style.display = 'none';
+                    timerDisplay.style.display = 'none';
+                    letterSelect.style.display = 'none';
+                    letterLabel.style.display = 'none';
+                    alert(`Oyun bitti! Toplam skorunuz: ${score}`);
+                    restartButton.style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        function resetGame() {
+            letterSelect.style.display = 'inline-block';
+            letterLabel.style.display = 'inline-block';
+            startButton.style.display = 'inline-block';
+            restartButton.style.display = 'none';
+            grid.style.display = 'none';
+            timerDisplay.style.display = 'none';
+            scoreDisplay.style.display = 'none';
+        }
+
+        startButton.addEventListener('click', () => {
+            letterSelect.style.display = 'none';
+            letterLabel.style.display = 'none';
+            startButton.style.display = 'none';
+            startGame();
+        });
+
+        restartButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
