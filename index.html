@@ -160,7 +160,7 @@
     <div class="timer" style="display: none;">Süre: 30 saniye</div>
 
     <!-- Background sound element -->
-    <audio id="background-sound" loop autoplay preload="auto" autoplay="true" loop="true">
+    <audio id="background-sound" preload="auto" autoplay="true" loop="true">
         <source src="https://www.soundjay.com/free-music/sounds/destination-01.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
@@ -184,7 +184,26 @@
 
         // Set background sound volume (low volume to not overpower button sounds)
         const backgroundSound = document.getElementById('background-sound');
-        backgroundSound.volume = 0.1; // Adjust volume as needed
+        backgroundSound.volume = 0.5; // Adjust volume as needed
+
+            // Ensure background sound plays on user interaction
+        function playBackgroundSound() {
+            backgroundSound.volume = 0.5; // Set a reasonable volume level
+            backgroundSound.play().catch(error => {
+                console.error('Background sound failed to play:', error);
+            });
+        }
+
+            // Start playing the sound after user interaction
+            startButton.addEventListener('click', () => {
+                playBackgroundSound();
+                // Start the game logic here
+            });
+
+            restartButton.addEventListener('click', () => {
+                playBackgroundSound();
+                // Reset the game logic here
+            });
 
         function generateGrid(selectedLetter) {
             const letters = 'abcçdefgğhıijklmnoöprsştuüvyz'.split('');
@@ -219,6 +238,7 @@
                 grid.appendChild(button);
             }
         }
+        
 
         function startGame() {
             const selectedLetter = letterSelect.value;
